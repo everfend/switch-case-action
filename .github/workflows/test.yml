@@ -1,0 +1,29 @@
+name: "Test"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./
+        id: switch-case
+        with:
+          default: "its the default"
+          conditionals-with-values: |
+            ${{ 'test' == 'not-test' }} => shouldnt be this one
+            ${{ 'test' == 'test' }} => correctAnswer
+            true=>notThisOneEitherAlreadyReturned
+            false => nope
+
+      - run: echo ${{ steps.switch-case.outputs.value }}
+
+      - name: Fail on non-correct answer
+        if: ${{ steps.switch-case.outputs.value != 'correctAnswer' }}
+        run: 'echo "Not Correct Answer :/" && exit 1'

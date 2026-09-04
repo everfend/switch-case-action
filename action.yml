@@ -1,0 +1,44 @@
+name: 'Switch Statement'
+description: 'Checks the conditionals-and-values input for the correct one, and if none found, returns default (like a switch case)'
+
+branding:
+  icon: align-justify
+  color: orange
+
+inputs:
+  default:
+    description: "The value to be returned if no conditionals match"
+    required: true
+  conditionals-with-values:
+    description: "A newline delimited conditional array, split by an arrow (=>)"
+    required: true
+
+outputs:
+  value:
+    description: "The value based on all other logic"
+    value: ${{ steps.return-value.outputs.value }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Parse Conditionals and Value
+      uses: KyoriPowered/action-regex-match@v5
+      id: parse-value
+      with:
+        text: ${{ inputs.conditionals-with-values }}
+        regex: 'true\s*=>\s*(.*)?$'
+        flags: m
+    - run: "echo ------------- Regex Results ------------"
+      shell: bash
+    - run: "echo found - ${{ steps.parse-value.outputs.match != '' }}"
+      shell: bash
+    - run: "echo group1 - ${{ steps.parse-value.outputs.group1 }}"
+      shell: bash
+
+    - name: Determine Message
+      uses: haya14busa/action-cond@v1
+      id: return-value
+      with:
+        cond: ${{ steps.parse-value.outputs.match != '' }}
+        if_true: ${{ steps.parse-value.outputs.group1 }}
+        if_false: ${{ inputs.default }}
